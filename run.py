@@ -12,6 +12,7 @@ import keras
 from scipy.misc import imread
 from sklearn.preprocessing import LabelEncoder
 from keras.applications.inception_v3 import InceptionV3
+from keras.applications.xception import Xception
 from keras.preprocessing import image
 from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
@@ -20,8 +21,8 @@ from utils.utils import grouper, threadsafe_iter, threadsafe_generator, get_feat
 
 def create_model(num_classes=None):
 
-    # Pre-trained base model (InceptionV3) 
-    base_model = InceptionV3(weights='imagenet', include_top=False)
+    # Pre-trained base model (Xception) 
+    base_model = Xception(weights='imagenet', include_top=False)
     
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
@@ -59,7 +60,7 @@ def main():
         categories.to_csv('categories.csv')
 
     try:
-        inception = keras.models.load_model('inceptionv3-finetune.h5')
+        inception = keras.models.load_model('xception-finetune.h5')
     except:
         inception = create_model(num_classes=len(labelencoder.classes_))
 
@@ -79,7 +80,8 @@ def main():
         validation_steps=50
     )
 
-    inception.save('inceptionv3-finetune.h5')
+    
+    inception.save('xception-finetune.h5')
 
     for layer in inception.layers[:249]:
         layer.trainable = False
