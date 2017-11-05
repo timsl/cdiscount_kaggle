@@ -1,2 +1,4 @@
 data/
 models/
+logs/
+categories.csv

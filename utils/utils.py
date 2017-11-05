@@ -3,6 +3,7 @@ import pickle
 import io
 import time
 import bson
+import itertools
 import threading
 
 import numpy as np
@@ -10,7 +11,7 @@ import pandas as pd
 import keras
 from scipy.misc import imread
 from sklearn.preprocessing import LabelEncoder
-from keras.applications.inception_v3 import InvepctionV3
+from keras.applications.inception_v3 import InceptionV3
 from keras.preprocessing import image
 from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
@@ -43,6 +44,26 @@ def threadsafe_generator(f):
 
 @threadsafe_generator
 def get_features_label(documents, batch_size=32, return_labels=True):
+    
+    if os.path.isfile('labelencoder.pkl'):
+        with open('labelencoder.pkl', 'rb') as f:
+            labelencoder = pickle.load(f)
+        categories = pd.read_csv('categories.csv')
+        
+    else:
+        documents = bson.decode_file_iter(open('data/train.bson', 'rb'))
+        categories = [(d['_id'], d['category_id']) for d in documents]
+        categories = pd.DataFrame(categories, columns=['id', 'cat'])
+
+        labelencoder = LabelEncoder()
+        labelencoder.fit(categories.cat.unique().ravel())
+
+        with open('labelencoder.pkl', 'wb') as f:
+            pickle.dump(labelencoder, f)
+
+        categories.to_csv('categories.csv')
+
+
     for batch in grouper(batch_size, documents):
         images = []
         labels = []
